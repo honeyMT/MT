@@ -1,0 +1,261 @@
+#include<iostream>
+#include<Windows.h>
+#include<assert.h>
+#include<stack>
+#include<queue>
+
+using namespace std;
+
+template<class T>
+struct BinaryTreeNode
+{
+public:
+
+	typedef BinaryTreeNode<T> Node;
+
+	BinaryTreeNode(const T& x)
+		:val(x)
+		,_left(NULL)
+		,_right(NULL)
+	{}
+
+	T val;
+	Node* _left;
+	Node* _right;
+};
+
+template<class T>
+class BinaryTree
+{
+	typedef BinaryTreeNode<T> Node;
+
+public:
+
+	BinaryTree(T* a, size_t n, const T& invalid)
+	{
+		size_t index = 0;
+		_root = CreateTree(a, n, invalid, index);
+	}
+
+	BinaryTree(const BinaryTree<T>& t)
+	{
+		_root = _Copy(t._root);
+	}
+
+	BinaryTree<T>& operator=(BinaryTree<T> t)
+	{
+		swap(_root, t._root);
+		return *this;
+	}
+
+	//非递归前序遍历
+	void  PrevOrder()
+	{
+		assert(_root != NULL);
+		cout << "前序遍历:";
+		Node* cur = _root;
+		stack<Node*> q;
+
+		while (!q.empty() || cur)
+		{
+			while (cur)
+			{
+				cout << cur->val << " ";
+				q.push(cur);
+				cur = cur->_left;
+			}
+			Node* top = q.top();
+			cur = top->_right;
+			q.pop();
+		}
+		cout << endl;
+	}
+
+
+	//非递归中序遍历
+	void InOrder()
+	{
+		assert(_root != NULL);
+		cout << "中序遍历:";
+		Node* cur = _root;
+		stack<Node*> q;
+
+		while (!q.empty() || cur)
+		{
+			while (cur)
+			{
+				q.push(cur);
+				cur = cur->_left;
+			}
+			Node* top = q.top();
+			cout << top->val << " ";
+			cur = top->_right;
+			q.pop();
+		}
+		cout<<endl;9
+	}
+
+	//非递归后序遍历
+	void PosOrder()
+	{
+		assert(_root != NULL);
+		cout << "后序遍历:";
+		Node* cur = _root;
+		Node* prev = NULL;
+		stack<Node*> q;
+
+		while (!q.empty() || cur)
+		{
+			while (cur)
+			{
+				q.push(cur);
+				cur = cur->_left;
+			}
+
+			Node* top = q.top();
+
+			if (top->_right == NULL || top->_right == prev) //可以访问的情况
+			{
+				cout << top->val << " ";
+				q.pop();
+			}
+			else  //说明它的右子树并没有访问完毕，该节点不能被访问并pop
+			{
+				cur = top->_right;
+			}
+			prev = top;
+		}
+		cout << endl;
+
+	}
+
+
+
+	//void PostOrder()
+	//{
+	//	if (_root == NULL)
+	//		return;
+	//	stack<Node*> q1;
+	//	Node* cur = _root;
+	//	Node* prev = NULL;
+	//	while (cur)
+	//	{
+	//		q1.push(cur);
+	//		cur = cur->_left;
+	//	}
+	//	while (!q1.empty())
+	//	{
+	//		cur = q1.top();
+	//		q1.pop();
+	//		if (cur->_right == NULL || cur->_right == prev)
+	//		{
+	//			cout << cur->_data << " ";
+	//			prev = cur;
+	//		}
+	//		//这里的else语句可换成带条件的else if (cur->_left == pLastVisit)
+	//		//若左子树刚被访问过，则需先进入右子树(根节点需再次入栈)
+	//		//因为：上面的条件没通过就一定是下面的条件满足。仔细想想！
+	//		//我们刚开始把最左路径已经全部压入栈中.
+	//		else
+	//		{
+	//			q1.push(cur);
+	//			cur = cur->_right;
+	//			while (cur)
+	//			{
+	//				q1.push(cur);
+	//				cur = cur->_left;
+	//			}
+	//		}
+	//	}
+	//	cout << endl;
+	//}
+
+
+
+	//非递归层序遍历
+	void LevelOrder()
+	{
+		assert(_root != NULL);
+		cout << "层序遍历:";
+		Node* cur = _root;
+		queue<Node*> q;
+		q.push(cur);
+
+		while (!q.empty())
+		{
+			cur = q.front();
+
+			if (cur->_left != NULL)
+			{
+				q.push(cur->_left);
+			}
+			if (cur->_right != NULL)
+			{
+				q.push(cur->_right);
+			}
+
+			cout << cur->val << " ";
+
+			q.pop();
+		}
+		cout << endl;
+	}
+
+	~BinaryTree()
+	{
+		Destroy(_root);
+	}
+
+
+private:
+
+	Node* _Copy(Node* root)
+	{
+		Node* newroot = NULL;
+		if (root != NULL)
+		{
+			newroot = new Node(root->val);
+			newroot->_left = _Copy(root->_left);
+			newroot->_right = _Copy(root->_right);
+		}
+		return newroot;
+	}
+
+	Node* CreateTree(T* a, size_t n, const T& invalid, size_t& index)
+	{
+		Node* root = NULL;
+		if (index < n && a[index] != invalid)
+		{
+			root = new Node(a[index]);
+			root->_left = CreateTree(a, n, invalid, ++index);
+			root->_right = CreateTree(a, n, invalid, ++index);
+		}
+		return root;
+	}
+
+	void Destroy(Node* root)
+	{
+		if (root != NULL)
+		{
+			Destroy(root->_left);
+			Destroy(root->_right);
+			delete root;
+			root = NULL;
+		}
+	}
+
+
+private:
+	Node* _root;
+};
+
+void Test()
+{
+	int array[10] = { 1, 2, 3, '#', '#', 4, '#', '#', 5, 6 };
+	BinaryTree<int> t1(array, sizeof(array) / sizeof(array[0]), '#');	
+	t1.PrevOrder();
+	t1.InOrder();
+	t1.PosOrder();
+	t1.LevelOrder();
+ 	system("pause");
+}
